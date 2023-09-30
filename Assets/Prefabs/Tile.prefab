@@ -13,6 +13,7 @@ GameObject:
   - component: {fileID: 1164437218781715397}
   - component: {fileID: 2727567876963762149}
   - component: {fileID: 4971790910715596358}
+  - component: {fileID: 803664726407034145}
   m_Layer: 7
   m_Name: Tile
   m_TagString: Untagged
@@ -110,6 +111,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6949deb6a52e7dc4c820675b2075574a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  xPos: 0
+  yPos: 0
+  tileDirection: 0
+  isAvailable: 0
 --- !u!60 &4971790910715596358
 PolygonCollider2D:
   m_ObjectHideFlags: 0
@@ -141,3 +146,22 @@ PolygonCollider2D:
       - {x: 13, y: -15}
       - {x: 28, y: 0}
       - {x: 13, y: 15}
+--- !u!95 &803664726407034145
+Animator:
+  serializedVersion: 3
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 756596092271314500}
+  m_Enabled: 1
+  m_Avatar: {fileID: 0}
+  m_Controller: {fileID: 9100000, guid: 55419bfcf188dc74f8668f4583f567e2, type: 2}
+  m_CullingMode: 0
+  m_UpdateMode: 0
+  m_ApplyRootMotion: 0
+  m_LinearVelocityBlending: 0
+  m_WarningMessage: 
+  m_HasTransformHierarchy: 1
+  m_AllowConstantClipSamplingOptimization: 1
+  m_KeepAnimatorControllerStateOnDisable: 0

@@ -61,12 +61,12 @@ public class GameController : MonoBehaviour
 
         // GameAudioManager.PlaySound("theme");
 
-        // GridController.SetGridNodes();
         previousDirection = 1;
-        generateStartingTile();
 
+        generateStartingTile();
         MiniPlayer = Instantiate(MiniPlayerPrefab, currentHexTilePosition, Quaternion.identity).GetComponent<MiniPlayer>();
         CameraController.SetCameraLookAt(MiniPlayer.transform);
+
         StateMachine.Initialize(GenerateTileState);
     }
 
@@ -87,6 +87,8 @@ public class GameController : MonoBehaviour
         startingHexTile.tileDirection = 1;
         startingHexTile.transform.SetParent(transform);
 
+        // startingHexTile.SetTileType("empty");
+        
         SetCurrentHexTilePosition(startingHexTile.transform.position);
         SetCurrentHexTile(startingHexTile);
     }
@@ -127,11 +129,12 @@ public class GameController : MonoBehaviour
 
     public void GenerateHexTile(Vector3 position, int xPos, int yPos, int tileDirection)
     {
-        HexTile startingHexTile = Instantiate(TilePrefab, position, Quaternion.identity).GetComponent<HexTile>();
-        startingHexTile.xPos = xPos;
-        startingHexTile.yPos = yPos;
-        startingHexTile.tileDirection = tileDirection;
-        startingHexTile.transform.SetParent(transform);
+        HexTile newHexTile = Instantiate(TilePrefab, position, Quaternion.identity).GetComponent<HexTile>();
+        newHexTile.xPos = xPos;
+        newHexTile.yPos = yPos;
+        newHexTile.tileDirection = tileDirection;
+        newHexTile.SetTileType(GenerateRandomTileType());
+        newHexTile.transform.SetParent(transform);
     }
 
     public Vector3 GetCurrentHexTilePosition()
@@ -187,4 +190,24 @@ public class GameController : MonoBehaviour
         }
     }
 
+    public string GenerateRandomTileType()
+    {
+        int randomNumber    = Random.Range(0, 100); // Generate a random number between 0 and 99
+        string returnType;
+        
+        if (randomNumber < 33)
+        {
+            returnType = "chest";
+        }
+        else if (randomNumber < 66)
+        {
+            returnType = "enemy";
+        }
+        else
+        {
+            returnType = "empty";
+        }
+
+        return returnType;
+    }
 }

@@ -8,26 +8,45 @@ public class HexTile : MonoBehaviour
     public int xPos;
     public int yPos;
     public int tileDirection;
-    // public int F { get { return G + H; } }
-
-    // public bool isBlocked;
     public bool isAvailable;
 
+    public Animator TileAnimator    { get; private set; }
 
-    // public Vector3Int gridLocation;
-    // public Vector2Int grid2DLocation { get { return new Vector2Int(gridLocation.x, gridLocation.y); } }
+    private int tileType;
 
-    // // Shows this Node
-    // public void ShowNode()
-    // {
-    //     isAvailable = true;
-    //     gameObject.GetComponent<SpriteRenderer>().color = new Color(1, 1, 1, 0.4f);
-    // }
+    public void SetTileType(string tileTypeString)
+    {
+        switch (tileTypeString)
+        {
+            case "empty":
+                tileType = 0;
+                TileAnimator.SetBool("isEmpty", true);
+                break;
 
-    // // Hides this Node
-    // public void HideNode()
-    // {
-    //     isAvailable = false;
-    //     gameObject.GetComponent<SpriteRenderer>().color = new Color(1, 1, 1, 0);
-    // }
+            case "enemy":
+                tileType = 1;
+                TileAnimator.SetBool("isEnemy", true);
+                break;
+
+            case "chest":
+                tileType = 2;
+                TileAnimator.SetBool("isChest", true);
+                break;
+
+            default:
+                tileType = 0;
+                break;
+        }
+    }    
+
+    public int GetTileType()
+    {
+        return tileType;
+    }    
+
+    private void Awake()
+    {
+        TileAnimator    = GetComponent<Animator>();
+    }
+
 }
