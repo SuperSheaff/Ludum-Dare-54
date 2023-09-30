@@ -20,6 +20,8 @@ public class GamePlayerChooseTileState : GameState
     public override void Enter()
     {
         base.Enter();
+
+        gameController.SetAvailableHexTiles();
     }
 
     public override void Exit()
@@ -35,10 +37,22 @@ public class GamePlayerChooseTileState : GameState
 
         if (focusedOnHexTile != null)
         {
-            if (Input.GetMouseButtonDown(0) && focusedOnHexTile.isAvailable)
+            if (focusedOnHexTile.isAvailable) {
+                gameController.Cursor.SetActive(true);
+                gameController.Cursor.transform.position = focusedOnHexTile.transform.position;
+
+               if (Input.GetMouseButtonDown(0))
+                {
+                    gameController.SetMiniPlayerTargetLocation(focusedOnHexTile.transform.position);
+                    gameController.SetPreviousDirection(focusedOnHexTile.tileDirection);
+                    gameController.SetCurrentHexTile(focusedOnHexTile);
+                    gameController.SetCurrentHexTilePosition(focusedOnHexTile.transform.position);
+                    stateMachine.ChangeState(gameController.PlayerMoveState);
+                } 
+            }
+            else 
             {
-                gameController.SetMiniPlayerTargetLocation(focusedOnHexTile.transform.position);
-                stateMachine.ChangeState(gameController.PlayerMoveState);
+                gameController.Cursor.SetActive(false);
             }
         }
     }

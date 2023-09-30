@@ -12,6 +12,7 @@ public class GameController : MonoBehaviour
 
         public GameStartState               StartState              { get; private set; }
         public GamePlayerChooseTileState    PlayerChooseTileState   { get; private set; }
+        public GameGenerateTileState        GenerateTileState       { get; private set; }
         public GamePlayerMoveState          PlayerMoveState         { get; private set; }
         public GameOverState                GameOverState           { get; private set; }
         
@@ -29,8 +30,13 @@ public class GameController : MonoBehaviour
         public GameObject       Cursor;
         public MiniPlayer       MiniPlayer;
 
-        private Vector3 currentTilePosition;
+        private int previousDirection;
+        private Vector3 currentHexTilePosition;
+        private HexTile currentHexTile;
         private Vector3 miniPlayerTargetLocation;
+
+        public CameraController CameraController    { get; private set; }
+
     #endregion
 
     private void Awake() 
@@ -40,6 +46,7 @@ public class GameController : MonoBehaviour
 
         StartState              = new GameStartState(this, StateMachine, "Game Start");
         PlayerChooseTileState   = new GamePlayerChooseTileState(this, StateMachine, "Player Choose Tile");
+        GenerateTileState       = new GameGenerateTileState(this, StateMachine, "Generate Tile");
         PlayerMoveState         = new GamePlayerMoveState(this, StateMachine, "Player Move");
         GameOverState           = new GameOverState(this, StateMachine, "Game Over");
     }
@@ -50,35 +57,22 @@ public class GameController : MonoBehaviour
         // GameAudioManager    = GetComponent<AudioManager>();
         // GridController      = GameObject.FindGameObjectWithTag("GridController").GetComponent<GridController>();
         // MainCamera          = GameObject.FindGameObjectWithTag("MainCamera");
-        // CameraController    = GameObject.FindGameObjectWithTag("CMCamera").GetComponent<CameraController>();
+        CameraController    = GameObject.FindGameObjectWithTag("CMCamera").GetComponent<CameraController>();
 
         // GameAudioManager.PlaySound("theme");
 
         // GridController.SetGridNodes();
-
+        previousDirection = 1;
         generateStartingTile();
-        generateThreeChoiceTiles();
 
-        MiniPlayer = Instantiate(MiniPlayerPrefab, currentTilePosition, Quaternion.identity).GetComponent<MiniPlayer>();;
-
-        StateMachine.Initialize(PlayerChooseTileState);
+        MiniPlayer = Instantiate(MiniPlayerPrefab, currentHexTilePosition, Quaternion.identity).GetComponent<MiniPlayer>();
+        CameraController.SetCameraLookAt(MiniPlayer.transform);
+        StateMachine.Initialize(GenerateTileState);
     }
 
     private void Update()
     {
         StateMachine.CurrentState.LogicUpdate();   
-
-        HexTile cursorHexTile = GetFocusedOnHexTile();
-
-        if (cursorHexTile != null)
-        {
-            Cursor.SetActive(true);
-            Cursor.transform.position = cursorHexTile.transform.position;
-        }
-        else
-        {
-            Cursor.SetActive(false);
-        }   
     }
 
     private void FixedUpdate() {
@@ -87,36 +81,14 @@ public class GameController : MonoBehaviour
 
     private void generateStartingTile()
     {
-        GameObject hexTile = Instantiate(TilePrefab, transform.position, Quaternion.identity);
-        hexTile.transform.SetParent(transform);
+        HexTile startingHexTile = Instantiate(TilePrefab, transform.position, Quaternion.identity).GetComponent<HexTile>();
+        startingHexTile.xPos = 0;
+        startingHexTile.yPos = 0;
+        startingHexTile.tileDirection = 1;
+        startingHexTile.transform.SetParent(transform);
 
-        currentTilePosition = hexTile.transform.position;
-    }
-
-    private void generateThreeChoiceTiles()
-    {
-        Vector3 position0 = new Vector3(currentTilePosition.x - 40f, currentTilePosition.y + 16f, currentTilePosition.z);
-        Vector3 position1 = new Vector3(currentTilePosition.x, currentTilePosition.y + 31f, currentTilePosition.z);
-        Vector3 position2 = new Vector3(currentTilePosition.x + 40f, currentTilePosition.y + 16f, currentTilePosition.z);
-
-        for (int tiles = 0; tiles < 3; tiles++)
-        {
-            if (tiles == 0) 
-            {
-                GameObject hexTile = Instantiate(TilePrefab, position0, Quaternion.identity);
-                hexTile.transform.SetParent(transform);
-            }
-            if (tiles == 1) 
-            {
-                GameObject hexTile = Instantiate(TilePrefab, position1, Quaternion.identity);
-                hexTile.transform.SetParent(transform);
-            }
-            if (tiles == 2) 
-            {
-                GameObject hexTile = Instantiate(TilePrefab, position2, Quaternion.identity);
-                hexTile.transform.SetParent(transform);
-            }
-        }
+        SetCurrentHexTilePosition(startingHexTile.transform.position);
+        SetCurrentHexTile(startingHexTile);
     }
 
     public HexTile GetFocusedOnHexTile()
@@ -152,4 +124,67 @@ public class GameController : MonoBehaviour
     {
         miniPlayerTargetLocation = newLocation;
     }
+
+    public void GenerateHexTile(Vector3 position, int xPos, int yPos, int tileDirection)
+    {
+        HexTile startingHexTile = Instantiate(TilePrefab, position, Quaternion.identity).GetComponent<HexTile>();
+        startingHexTile.xPos = xPos;
+        startingHexTile.yPos = yPos;
+        startingHexTile.tileDirection = tileDirection;
+        startingHexTile.transform.SetParent(transform);
+    }
+
+    public Vector3 GetCurrentHexTilePosition()
+    {
+        return currentHexTilePosition;
+    }
+
+    public HexTile GetCurrentHexTile()
+    {
+        return currentHexTile;
+    }
+
+    public void SetCurrentHexTilePosition(Vector3 newPosition)
+    {
+        currentHexTilePosition = newPosition;
+    }
+
+    public void SetCurrentHexTile(HexTile newHexTile)
+    {
+        currentHexTile = newHexTile;
+    }
+
+    public int GetPreviousDirection() 
+    {
+        return previousDirection;
+    }
+
+    public void SetPreviousDirection(int newDirection) 
+    {
+        previousDirection = newDirection;
+    }
+
+    public void SetAvailableHexTiles()
+    {
+        foreach (Transform child in transform)
+        {
+            // Check if the child has a HexTile component
+            HexTile hexTile = child.GetComponent<HexTile>();
+            
+            if (hexTile != null)
+            {
+                if ((hexTile.xPos == currentHexTile.xPos - 1 && hexTile.yPos == currentHexTile.yPos) ||
+                    (hexTile.xPos == currentHexTile.xPos && hexTile.yPos == currentHexTile.yPos + 1) ||
+                    (hexTile.xPos == currentHexTile.xPos + 1 && hexTile.yPos == currentHexTile.yPos + 1))             
+                {
+                    hexTile.isAvailable = true;
+                }
+                else
+                {
+                    hexTile.isAvailable = false;
+                }
+            }
+        }
+    }
+
 }

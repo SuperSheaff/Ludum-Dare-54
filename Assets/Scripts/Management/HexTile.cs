@@ -5,13 +5,14 @@ using UnityEngine;
 public class HexTile : MonoBehaviour
 {
 
-    // public int G;
-    // public int H;
+    public int xPos;
+    public int yPos;
+    public int tileDirection;
     // public int F { get { return G + H; } }
 
     // public bool isBlocked;
-    public bool isAvailable = true;
-    // public bool hasAbility;
+    public bool isAvailable;
+
 
     // public Vector3Int gridLocation;
     // public Vector2Int grid2DLocation { get { return new Vector2Int(gridLocation.x, gridLocation.y); } }

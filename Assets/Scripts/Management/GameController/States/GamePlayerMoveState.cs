@@ -52,7 +52,7 @@ public class GamePlayerMoveState : GameState
 
         if (Vector2.Distance(gameController.MiniPlayer.transform.position, targetLocation) < 0.0001f)
         {
-            stateMachine.ChangeState(gameController.PlayerChooseTileState);
+            stateMachine.ChangeState(gameController.GenerateTileState);
         }
     }
 
