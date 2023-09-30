@@ -13,7 +13,7 @@ GameObject:
   - component: {fileID: -5703000021315038472}
   m_Layer: 6
   m_Name: MiniPlayer
-  m_TagString: Player
+  m_TagString: MiniPlayer
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0

@@ -47,6 +47,7 @@ public class GamePlayerChooseTileState : GameState
                     gameController.SetPreviousDirection(focusedOnHexTile.tileDirection);
                     gameController.SetCurrentHexTile(focusedOnHexTile);
                     gameController.SetCurrentHexTilePosition(focusedOnHexTile.transform.position);
+                    gameController.SetNextInteraction(focusedOnHexTile.GetTileType());
                     stateMachine.ChangeState(gameController.PlayerMoveState);
                 } 
             }

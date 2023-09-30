@@ -19,6 +19,10 @@ public class BattleStartState : BattleState
     public override void Enter()
     {
         base.Enter();
+
+        battleController.GenerateEnemies();
+
+        stateMachine.ChangeState(battleController.BattlePlayerRoundState);
     }
 
     public override void Exit()

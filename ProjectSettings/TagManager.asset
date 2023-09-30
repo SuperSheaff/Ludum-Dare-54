@@ -5,6 +5,9 @@ TagManager:
   serializedVersion: 2
   tags:
   - CMCamera
+  - Battle Cam
+  - BattleController
+  - MiniPlayer
   layers:
   - Default
   - TransparentFX

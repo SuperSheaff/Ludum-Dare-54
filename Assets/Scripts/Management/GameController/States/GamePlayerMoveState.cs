@@ -8,6 +8,7 @@ public class GamePlayerMoveState : GameState
 
     private float moveSpeed = 100f;
     private Vector3 targetLocation;
+    private int nextInteraction;
 
     public GamePlayerMoveState(GameController gameController, GameStateMachine stateMachine, string animatorBoolName) : base(gameController, stateMachine, animatorBoolName)
     {
@@ -22,6 +23,7 @@ public class GamePlayerMoveState : GameState
     {
         base.Enter();
 
+        nextInteraction = gameController.GetNextInteraction();
         targetLocation = gameController.GetMiniPlayerTargetLocation();
     }
 
@@ -52,7 +54,19 @@ public class GamePlayerMoveState : GameState
 
         if (Vector2.Distance(gameController.MiniPlayer.transform.position, targetLocation) < 0.0001f)
         {
-            stateMachine.ChangeState(gameController.GenerateTileState);
+            if (nextInteraction == 0)
+            {
+                stateMachine.ChangeState(gameController.GenerateTileState);
+            } 
+            if (nextInteraction == 1)
+            {
+                stateMachine.ChangeState(gameController.BattleState);
+                gameController.BattleController.StateMachine.ChangeState(gameController.BattleController.BattleStartState);
+            } 
+            if (nextInteraction == 2)
+            {
+                stateMachine.ChangeState(gameController.GenerateTileState);
+            } 
         }
     }
 

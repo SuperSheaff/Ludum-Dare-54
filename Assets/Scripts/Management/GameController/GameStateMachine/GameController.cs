@@ -14,6 +14,7 @@ public class GameController : MonoBehaviour
         public GamePlayerChooseTileState    PlayerChooseTileState   { get; private set; }
         public GameGenerateTileState        GenerateTileState       { get; private set; }
         public GamePlayerMoveState          PlayerMoveState         { get; private set; }
+        public GameBattleState              BattleState             { get; private set; }
         public GameOverState                GameOverState           { get; private set; }
         
     #endregion
@@ -34,8 +35,11 @@ public class GameController : MonoBehaviour
         private Vector3 currentHexTilePosition;
         private HexTile currentHexTile;
         private Vector3 miniPlayerTargetLocation;
+        private int nextInteraction;
 
+        public BattleController BattleController    { get; private set; }
         public CameraController CameraController    { get; private set; }
+        public GameObject BattleCam                 { get; private set; }
 
     #endregion
 
@@ -48,6 +52,7 @@ public class GameController : MonoBehaviour
         PlayerChooseTileState   = new GamePlayerChooseTileState(this, StateMachine, "Player Choose Tile");
         GenerateTileState       = new GameGenerateTileState(this, StateMachine, "Generate Tile");
         PlayerMoveState         = new GamePlayerMoveState(this, StateMachine, "Player Move");
+        BattleState             = new GameBattleState(this, StateMachine, "Battling");
         GameOverState           = new GameOverState(this, StateMachine, "Game Over");
     }
 
@@ -58,10 +63,14 @@ public class GameController : MonoBehaviour
         // GridController      = GameObject.FindGameObjectWithTag("GridController").GetComponent<GridController>();
         // MainCamera          = GameObject.FindGameObjectWithTag("MainCamera");
         CameraController    = GameObject.FindGameObjectWithTag("CMCamera").GetComponent<CameraController>();
+        BattleCam           = GameObject.FindGameObjectWithTag("Battle Cam");
+
+        BattleController    = GameObject.FindGameObjectWithTag("BattleController").GetComponent<BattleController>();
 
         // GameAudioManager.PlaySound("theme");
 
-        previousDirection = 1;
+        previousDirection   = 1;
+        nextInteraction     = 0;
 
         generateStartingTile();
         MiniPlayer = Instantiate(MiniPlayerPrefab, currentHexTilePosition, Quaternion.identity).GetComponent<MiniPlayer>();
@@ -86,128 +95,149 @@ public class GameController : MonoBehaviour
         startingHexTile.yPos = 0;
         startingHexTile.tileDirection = 1;
         startingHexTile.transform.SetParent(transform);
-
-        // startingHexTile.SetTileType("empty");
+        startingHexTile.SetTileType("empty");
         
         SetCurrentHexTilePosition(startingHexTile.transform.position);
         SetCurrentHexTile(startingHexTile);
     }
 
-    public HexTile GetFocusedOnHexTile()
-    {
-        Vector3 mousePosition       = Camera.main.ScreenToWorldPoint(Input.mousePosition);
-        Vector2 mousePosition2D     = new Vector2(mousePosition.x, mousePosition.y);
-        RaycastHit2D[] hits         = Physics2D.RaycastAll(mousePosition2D, Vector2.zero);
-        HexTile result              = null;
+    #region Other Methods
 
-        if (hits.Length > 0)
+        public void GenerateHexTile(Vector3 position, int xPos, int yPos, int tileDirection)
         {
-            hits.OrderByDescending(i => i.collider.transform.position.z);
+            HexTile newHexTile = Instantiate(TilePrefab, position, Quaternion.identity).GetComponent<HexTile>();
+            newHexTile.xPos = xPos;
+            newHexTile.yPos = yPos;
+            newHexTile.tileDirection = tileDirection;
+            newHexTile.SetTileType(GenerateRandomTileType());
+            newHexTile.transform.SetParent(transform);
         }
 
-        foreach (var hit in hits) 
+        public string GenerateRandomTileType()
         {
-            if (hit.collider.gameObject.GetComponent<HexTile>() != null)
-            {
-                result = hit.collider.gameObject.GetComponent<HexTile>();
-                break;
-            }
-        }
-
-        return result;
-    }
-
-    public Vector3 GetMiniPlayerTargetLocation()
-    {
-        return miniPlayerTargetLocation;
-    }
-
-    public void SetMiniPlayerTargetLocation(Vector3 newLocation)
-    {
-        miniPlayerTargetLocation = newLocation;
-    }
-
-    public void GenerateHexTile(Vector3 position, int xPos, int yPos, int tileDirection)
-    {
-        HexTile newHexTile = Instantiate(TilePrefab, position, Quaternion.identity).GetComponent<HexTile>();
-        newHexTile.xPos = xPos;
-        newHexTile.yPos = yPos;
-        newHexTile.tileDirection = tileDirection;
-        newHexTile.SetTileType(GenerateRandomTileType());
-        newHexTile.transform.SetParent(transform);
-    }
-
-    public Vector3 GetCurrentHexTilePosition()
-    {
-        return currentHexTilePosition;
-    }
-
-    public HexTile GetCurrentHexTile()
-    {
-        return currentHexTile;
-    }
-
-    public void SetCurrentHexTilePosition(Vector3 newPosition)
-    {
-        currentHexTilePosition = newPosition;
-    }
-
-    public void SetCurrentHexTile(HexTile newHexTile)
-    {
-        currentHexTile = newHexTile;
-    }
-
-    public int GetPreviousDirection() 
-    {
-        return previousDirection;
-    }
-
-    public void SetPreviousDirection(int newDirection) 
-    {
-        previousDirection = newDirection;
-    }
-
-    public void SetAvailableHexTiles()
-    {
-        foreach (Transform child in transform)
-        {
-            // Check if the child has a HexTile component
-            HexTile hexTile = child.GetComponent<HexTile>();
+            int randomNumber    = Random.Range(0, 100); // Generate a random number between 0 and 99
+            string returnType;
             
-            if (hexTile != null)
+            if (randomNumber < 33)
             {
-                if ((hexTile.xPos == currentHexTile.xPos - 1 && hexTile.yPos == currentHexTile.yPos) ||
-                    (hexTile.xPos == currentHexTile.xPos && hexTile.yPos == currentHexTile.yPos + 1) ||
-                    (hexTile.xPos == currentHexTile.xPos + 1 && hexTile.yPos == currentHexTile.yPos + 1))             
+                returnType = "chest";
+            }
+            else if (randomNumber < 66)
+            {
+                returnType = "enemy";
+            }
+            else
+            {
+                returnType = "empty";
+            }
+
+            return returnType;
+        }
+
+    #endregion
+
+    #region Set Methods
+
+        public void SetMiniPlayerTargetLocation(Vector3 newLocation)
+        {
+            miniPlayerTargetLocation = newLocation;
+        }
+
+        public void SetCurrentHexTilePosition(Vector3 newPosition)
+        {
+            currentHexTilePosition = newPosition;
+        }
+
+        public void SetCurrentHexTile(HexTile newHexTile)
+        {
+            currentHexTile = newHexTile;
+        }
+
+        public void SetNextInteraction(int interactionType)
+        {
+            nextInteraction = interactionType;
+        }
+
+        public void SetPreviousDirection(int newDirection) 
+        {
+            previousDirection = newDirection;
+        }
+
+        public void SetAvailableHexTiles()
+        {
+            foreach (Transform child in transform)
+            {
+                // Check if the child has a HexTile component
+                HexTile hexTile = child.GetComponent<HexTile>();
+                
+                if (hexTile != null)
                 {
-                    hexTile.isAvailable = true;
-                }
-                else
-                {
-                    hexTile.isAvailable = false;
+                    if ((hexTile.xPos == currentHexTile.xPos - 1 && hexTile.yPos == currentHexTile.yPos) ||
+                        (hexTile.xPos == currentHexTile.xPos && hexTile.yPos == currentHexTile.yPos + 1) ||
+                        (hexTile.xPos == currentHexTile.xPos + 1 && hexTile.yPos == currentHexTile.yPos + 1))             
+                    {
+                        hexTile.isAvailable = true;
+                    }
+                    else
+                    {
+                        hexTile.isAvailable = false;
+                    }
                 }
             }
-        }
-    }
+        }   
 
-    public string GenerateRandomTileType()
-    {
-        int randomNumber    = Random.Range(0, 100); // Generate a random number between 0 and 99
-        string returnType;
-        
-        if (randomNumber < 33)
+    #endregion
+
+    #region Get Methods
+
+        public Vector3 GetMiniPlayerTargetLocation()
         {
-            returnType = "chest";
-        }
-        else if (randomNumber < 66)
-        {
-            returnType = "enemy";
-        }
-        else
-        {
-            returnType = "empty";
+            return miniPlayerTargetLocation;
         }
 
-        return returnType;
-    }
+        public Vector3 GetCurrentHexTilePosition()
+        {
+            return currentHexTilePosition;
+        }
+
+        public HexTile GetCurrentHexTile()
+        {
+            return currentHexTile;
+        }
+
+        public int GetNextInteraction()
+        {
+            return nextInteraction;
+        }
+
+        public int GetPreviousDirection() 
+        {
+            return previousDirection;
+        }
+
+        public HexTile GetFocusedOnHexTile()
+        {
+            Vector3 mousePosition       = Camera.main.ScreenToWorldPoint(Input.mousePosition);
+            Vector2 mousePosition2D     = new Vector2(mousePosition.x, mousePosition.y);
+            RaycastHit2D[] hits         = Physics2D.RaycastAll(mousePosition2D, Vector2.zero);
+            HexTile result              = null;
+
+            if (hits.Length > 0)
+            {
+                hits.OrderByDescending(i => i.collider.transform.position.z);
+            }
+
+            foreach (var hit in hits) 
+            {
+                if (hit.collider.gameObject.GetComponent<HexTile>() != null)
+                {
+                    result = hit.collider.gameObject.GetComponent<HexTile>();
+                    break;
+                }
+            }
+
+            return result;
+        }
+
+    #endregion
 }

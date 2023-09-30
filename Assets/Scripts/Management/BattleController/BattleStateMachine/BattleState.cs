@@ -16,7 +16,7 @@ public class BattleState
 
     public BattleState(BattleController battleController, BattleStateMachine stateMachine, string stateName) 
     {
-        this.bameController     = battleController;
+        this.battleController     = battleController;
         this.stateMachine       = stateMachine;
         this.stateName          = stateName;
     }
