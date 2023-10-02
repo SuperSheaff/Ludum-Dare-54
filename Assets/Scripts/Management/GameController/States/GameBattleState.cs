@@ -21,6 +21,9 @@ public class GameBattleState : GameState
 
         gameController.CameraController.gameObject.SetActive(false);
         gameController.BattleCam.SetActive(true);
+
+        gameController.GameAudioManager.PlaySound("music");
+        gameController.GameAudioManager.StopSound("ambient");
     }
 
     public override void Exit()
@@ -29,6 +32,9 @@ public class GameBattleState : GameState
 
         gameController.CameraController.gameObject.SetActive(true);
         gameController.BattleCam.SetActive(false);
+        
+        gameController.GameAudioManager.StopSound("music");
+        gameController.GameAudioManager.PlaySound("ambient");
     }
 
     public override void LogicUpdate()

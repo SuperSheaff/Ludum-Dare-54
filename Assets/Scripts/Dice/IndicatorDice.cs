@@ -74,6 +74,7 @@ public class IndicatorDice : MonoBehaviour
         Debug.Log("Object Clicked!");
         if (BattleController.GetCanRollDice())
         {
+            BattleController.AudioManager.PlayAudio("click", 0.8f);
             RollThisDice();
             BattleController.diceIndicators.Remove(this);
         }
@@ -82,13 +83,15 @@ public class IndicatorDice : MonoBehaviour
 
     private void OnMouseEnter()
     {
-        // This code runs when the mouse pointer enters the collider.
-        isHovered = true;
-        FloatObjectX.canMove = false;
-        Animator.SetBool("isHover", true);
-        Debug.Log("Mouse entered!");
+        if (BattleController.GetCanRollDice())
+        {
+            Animator.SetBool("isHover", true);
+            BattleController.AudioManager.PlayAudio("hover", 0.8f);
+            FloatObjectX.canMove = false;
+        }
         
-        // You can add code to change the appearance or behavior of the GameObject here.
+        isHovered = true;
+        Debug.Log("Mouse entered!");
     }
 
     private void OnMouseExit()

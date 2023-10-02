@@ -27,7 +27,10 @@ public class DiceSlot : MonoBehaviour
     {
         if (hasDiceInSlot)
         {
-            DiceInSlot.SelfDelete();
+            if (DiceInSlot != null)
+            {
+                DiceInSlot.SelfDelete();
+            }
             hasDiceInSlot = false;
         }
 

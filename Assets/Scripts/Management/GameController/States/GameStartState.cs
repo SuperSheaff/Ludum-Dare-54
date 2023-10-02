@@ -18,6 +18,7 @@ public class GameStartState : GameState
     public override void Enter()
     {
         base.Enter();
+        gameController.GameAudioManager.PlaySound("ambient");
     }
 
     public override void Exit()

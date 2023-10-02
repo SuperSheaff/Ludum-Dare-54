@@ -23,6 +23,7 @@ public class GamePlayerMoveState : GameState
     {
         base.Enter();
 
+        gameController.RemoveOldHexTiles();
         nextInteraction = gameController.GetNextInteraction();
         targetLocation = gameController.GetMiniPlayerTargetLocation();
     }
@@ -54,18 +55,30 @@ public class GamePlayerMoveState : GameState
 
         if (Vector2.Distance(gameController.MiniPlayer.transform.position, targetLocation) < 0.0001f)
         {
+
+            // Empty
             if (nextInteraction == 0)
             {
                 stateMachine.ChangeState(gameController.GenerateTileState);
             } 
+
+            // Battle
             if (nextInteraction == 1)
             {
                 stateMachine.ChangeState(gameController.BattleState);
                 gameController.BattleController.StateMachine.ChangeState(gameController.BattleController.BattleStartState);
             } 
+
+            // Chest
             if (nextInteraction == 2)
             {
-                stateMachine.ChangeState(gameController.GenerateTileState);
+                stateMachine.ChangeState(gameController.ChooseRewardState);
+            } 
+
+            // Win
+            if (nextInteraction == 3)
+            {
+                stateMachine.ChangeState(gameController.GameWinState);
             } 
         }
     }

@@ -10,6 +10,7 @@ public class Enemy : MonoBehaviour
 
     public BattleController BattleController    { get; private set; }
     public Animator Animator                    { get; private set; }
+    private ParticleSystem damageParticleSystem;
 
     private int attackDamage;
     private int maxHealth;
@@ -18,7 +19,6 @@ public class Enemy : MonoBehaviour
     private bool isTarget;
 
     private GameObject TargetIndicator;
-
     private TextMeshPro textMeshProComponent;
 
     private void Start()
@@ -44,6 +44,26 @@ public class Enemy : MonoBehaviour
         {
             Debug.LogError("ChildObject not found.");
         }
+
+        Transform HealthIcon = transform.Find("Health Icon");
+        if (HealthIcon != null)
+        {
+            // Access the TextMeshPro component within the child object
+            damageParticleSystem = HealthIcon.GetComponent<ParticleSystem>();
+
+            if (damageParticleSystem != null)
+            {
+                damageParticleSystem.Stop();
+            }
+            else
+            {
+                Debug.LogError("TextMeshPro component not found in childObject.");
+            }
+        }
+        else
+        {
+            Debug.LogError("ChildObject not found.");
+        }
     }
 
     private void Update()
@@ -55,16 +75,21 @@ public class Enemy : MonoBehaviour
     private void OnMouseDown()
     {
         Debug.Log("test");
-        if (BattleController.GetCanPickTarget())
+        if (BattleController.GetCanPickTarget() && !isTarget)
         {
             BattleController.ResetAllTargets();
             SetIsTarget(true);
+            BattleController.AudioManager.PlayAudio("click", 0.8f);
         }
     }
 
     private void OnMouseEnter()
     {
-        Animator.SetBool("isHover", true);
+        if (!isTarget)
+        {
+            Animator.SetBool("isHover", true);
+            BattleController.AudioManager.PlayAudio("hover", 0.8f);
+        }
     }
 
     private void OnMouseExit()
@@ -140,12 +165,29 @@ public class Enemy : MonoBehaviour
 
     public void DealDamage(int damageToDeal)
     {
+
+        if (damageToDeal > 0)
+        {
+            StartCoroutine(DamageParticles());
+            BattleController.AudioManager.PlayAudio("hit", 0.3f);
+        } else if (damageToDeal < 0)
+        {
+            BattleController.AudioManager.PlayAudio("heal", 0.8f);
+        }
+
         currentHealth -= damageToDeal;
 
         if (currentHealth < 0)
         {
             currentHealth = 0;
         }
+    }
+
+    public IEnumerator DamageParticles()
+    {
+        damageParticleSystem.Play();
+        yield return new WaitForSeconds(0.1f); // Adjust the delay duration as needed
+        damageParticleSystem.Stop();
     }
 
 }

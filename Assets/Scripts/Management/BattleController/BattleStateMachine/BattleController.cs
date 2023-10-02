@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using Unity.VisualScripting;
 using UnityEngine;
 
 public class BattleController : MonoBehaviour
@@ -21,7 +22,9 @@ public class BattleController : MonoBehaviour
     #region Stuff
         public GameController GameController    { get; private set; }
         public EndTurnButton EndTurnButton      { get; private set; }
+        public AudioManager AudioManager        { get; private set; }
         public Player Player                    { get; private set; }
+        public Dice RolledDice;
 
         public int minEnemies = 1;
         public int maxEnemies = 3;
@@ -30,6 +33,8 @@ public class BattleController : MonoBehaviour
         public int minDamage = 1;
         public int maxDamage = 10;
 
+        private int battlesWon = 0;
+
         private bool canRollDice = false;
         private bool enemiesAreDead;
         private bool canPickTarget;
@@ -37,6 +42,8 @@ public class BattleController : MonoBehaviour
         public Transform enemySpotA;
         public Transform enemySpotB;
         public Transform enemySpotC;
+        public Transform enemySpotD;
+        public Transform enemySpotE;
 
         public Transform diceRollSpot;
 
@@ -80,6 +87,7 @@ public class BattleController : MonoBehaviour
         GameController  = GameObject.FindGameObjectWithTag("GameController").GetComponent<GameController>();
         EndTurnButton   = GameObject.FindGameObjectWithTag("EndTurnButton").GetComponent<EndTurnButton>();
         Player          = GameObject.FindGameObjectWithTag("Player").GetComponent<Player>();
+        AudioManager    = GetComponent<AudioManager>();
 
     }
 
@@ -98,8 +106,12 @@ public class BattleController : MonoBehaviour
 
     public void GenerateEnemies()
     {
+
+        BalanceEnemies();
+
         int numEnemies = Random.Range(minEnemies, maxEnemies + 1);
-        Vector3 spawnLocation = enemySpotB.position;
+        Vector3 spawnLocation = enemySpotA.position;
+        Transform newEnemyParent = enemySpotA;
         bool isTarget = false;
         
         for (int i = 0; i < numEnemies; i++)
@@ -107,22 +119,38 @@ public class BattleController : MonoBehaviour
             switch (i)
             {
                 case 0:
-                    spawnLocation = enemySpotB.position;
+                    spawnLocation = enemySpotA.position;
+                    newEnemyParent = enemySpotA;
                     isTarget = true;
                     break;
 
                 case 1:
-                    spawnLocation = enemySpotA.position;
+                    spawnLocation = enemySpotB.position;
+                    newEnemyParent = enemySpotB;
                     isTarget = false;
                     break;
 
                 case 2:
                     spawnLocation = enemySpotC.position;
+                    newEnemyParent = enemySpotC;
+                    isTarget = false;
+                    break;
+
+                case 3:
+                    spawnLocation = enemySpotD.position;
+                    newEnemyParent = enemySpotD;
+                    isTarget = false;
+                    break;
+
+                case 4:
+                    spawnLocation = enemySpotE.position;
+                    newEnemyParent = enemySpotE;
                     isTarget = false;
                     break;
 
                 default:
-                    spawnLocation = enemySpotB.position;
+                    spawnLocation = enemySpotA.position;
+                    newEnemyParent = enemySpotA;
                     isTarget = false;
                     break;
             }
@@ -139,7 +167,7 @@ public class BattleController : MonoBehaviour
                 enemy.SetCurrentHealth(enemy.GetMaxHealth());
                 enemy.SetAttackDamage(Random.Range(minDamage, maxDamage + 1));
                 enemy.SetIsTarget(isTarget);
-                enemy.transform.SetParent(EnemyParent);
+                enemy.transform.SetParent(newEnemyParent);
 
                 // Add the enemy to the list
                 enemies.Add(enemy);
@@ -202,8 +230,8 @@ public class BattleController : MonoBehaviour
 
     public void RollNewDice(Vector2 diceRange, int uniqueDiceNumber)
     {
-        Dice newRolledDice = Instantiate(dicePrefab, diceRollSpot.position, Quaternion.identity).GetComponent<Dice>();
-        newRolledDice.SetRolledAmount(Random.Range((int)diceRange.x, (int)diceRange.y + 1));
+        RolledDice = Instantiate(dicePrefab, diceRollSpot.position, Quaternion.identity).GetComponent<Dice>();
+        RolledDice.SetRolledAmount(Random.Range((int)diceRange.x, (int)diceRange.y + 1));
         SetCanRollDice(false);
     }
 
@@ -229,45 +257,7 @@ public class BattleController : MonoBehaviour
 
     public void CalculatePlayerTurn()
     {
-        int amountToDamage;
-        int amountToBlock;
-        int amountToHeal;
-
-        if (DiceSlotA.DiceInSlot != null)
-        {
-            amountToDamage = DiceSlotA.DiceInSlot.GetRolledAmount();
-        } else {
-            amountToDamage = 0;
-        }
-
-        if (DiceSlotB.DiceInSlot != null)
-        {
-            amountToBlock = DiceSlotB.DiceInSlot.GetRolledAmount();
-        } else {
-            amountToBlock = 0;
-        }
-
-        if (DiceSlotC.DiceInSlot != null)
-        {
-            amountToHeal = DiceSlotC.DiceInSlot.GetRolledAmount();
-        } else {
-            amountToHeal = 0;
-        }
-
-        DealDamageToTargetEnemy(amountToDamage);
-        Player.Block(amountToBlock);
-        Player.Heal(amountToHeal);
-
-        if (enemiesAreDead)
-        {
-            Player.ResetBlock();
-            GameController.StateMachine.ChangeState(GameController.GenerateTileState);
-            StateMachine.ChangeState(BattleWaitState);
-        }
-        else 
-        {
-            StateMachine.ChangeState(BattleEnemyRoundState);
-        }
+        StartCoroutine(PlayerTurn());
     }
 
     public void DealDamageToTargetEnemy(int amountToDamage)
@@ -302,31 +292,101 @@ public class BattleController : MonoBehaviour
 
     public void HandleEnemyAttacks()
     {
-        StartCoroutine(AttackEnemiesOneByOne());
+        StartCoroutine(EnemiesAttackOneByOne());
     }
 
-    private IEnumerator AttackEnemiesOneByOne()
+    private IEnumerator EnemiesAttackOneByOne()
     {
+        yield return new WaitForSeconds(1.0f); // Adjust the delay duration as needed
+
         foreach (Enemy enemy in enemies)
         {
             // Optionally, you can play an attack animation or perform other actions here
             // For example: enemy.PlayAttackAnimation();
 
-            yield return new WaitForSeconds(1.0f); // Adjust the delay duration as needed
-
             // Subtract the enemy's attack damage from the player's health
+            enemy.Animator.SetTrigger("attack");
+            yield return new WaitForSeconds(0.1f); // Adjust the delay duration as needed
             Player.DealDamage(enemy.GetAttackDamage());
+
+            yield return new WaitForSeconds(1.0f); // Adjust the delay duration as needed
 
             // Check if playerHealth is less than or equal to 0 (player is defeated)
             if (Player.GetCurrentHealth() <= 0)
             {
-                // Handle player defeat (e.g., game over)
-                Debug.Log("Game Over");
+                StateMachine.ChangeState(BattleWaitState);
+                GameController.StateMachine.ChangeState(GameController.GameOverState);
                 break; // Exit the loop since the player is defeated
             }
         }
 
         StateMachine.ChangeState(BattlePlayerRoundState);
+    }
+
+    private IEnumerator PlayerTurn()
+    {
+        int amountToDamage;
+        int amountToBlock;
+        int amountToHeal;
+
+        if (DiceSlotA.DiceInSlot != null)
+        {
+            amountToDamage = DiceSlotA.DiceInSlot.GetRolledAmount();
+        } else {
+            amountToDamage = 0;
+        }
+
+        if (DiceSlotB.DiceInSlot != null)
+        {
+            amountToBlock = DiceSlotB.DiceInSlot.GetRolledAmount();
+        } else {
+            amountToBlock = 0;
+        }
+
+        if (DiceSlotC.DiceInSlot != null)
+        {
+            amountToHeal = DiceSlotC.DiceInSlot.GetRolledAmount();
+        } else {
+            amountToHeal = 0;
+        }
+
+        if (amountToHeal != 0 && !(amountToHeal > 0 && (Player.GetMaxHealth() == Player.GetCurrentHealth())))
+        {
+            Player.Heal(amountToHeal);
+            yield return new WaitForSeconds(1.0f); // Adjust the delay duration as needed
+        }
+
+        if (amountToBlock > 0)
+        {            
+            Player.Block(amountToBlock);
+            yield return new WaitForSeconds(1.0f); // Adjust the delay duration as needed
+        }
+
+        if (amountToDamage != 0)
+        {
+            Player.Animator.SetTrigger("attack");
+            yield return new WaitForSeconds(0.1f); // Adjust the delay duration as needed
+            DealDamageToTargetEnemy(amountToDamage);
+            yield return new WaitForSeconds(1.0f); // Adjust the delay duration as needed
+        }
+
+        if (enemiesAreDead)
+        {
+            Player.ResetBlock();
+            GameController.StateMachine.ChangeState(GameController.GenerateTileState);
+            battlesWon ++;
+            AudioManager.PlayAudio("win", 0.666f);
+            StateMachine.ChangeState(BattleWaitState);
+        }
+        else 
+        {
+            StateMachine.ChangeState(BattleEnemyRoundState);
+        }
+    }
+
+    public int GetBattlesWon()
+    {
+        return battlesWon;
     }
 
     public void ResetDice()
@@ -355,6 +415,22 @@ public class BattleController : MonoBehaviour
         }
 
         diceIndicators.Clear();
+        Destroy(RolledDice);
+
+        if (RolledDice != null)
+        {
+            RolledDice.SelfDelete();
+        }
+    }
+
+    public void ResetEnemies()
+    {
+        foreach (Enemy enemy in enemies)
+        {
+            Destroy(enemy.gameObject);
+        }
+
+        enemies.Clear();
     }
 
     public void ResetAllTargets()
@@ -363,6 +439,65 @@ public class BattleController : MonoBehaviour
         {
             enemy.SetIsTarget(false);
         }
+    }
+
+    public void BalanceEnemies()
+    {
+
+        if (battlesWon == 0)
+        {
+            maxEnemies = 1;
+            minHealth = 6;
+            maxHealth = 6;
+            minDamage = 2;
+            maxDamage = 2;
+        }
+
+        if (0 < battlesWon && battlesWon <= 1)
+        {
+            maxEnemies = 1;
+            minHealth = 6;
+            maxHealth = 9;
+            minDamage = 2;
+            maxDamage = 3;
+        }
+
+        if (1 < battlesWon && battlesWon <= 4)
+        {
+            minEnemies = 2;
+            maxEnemies = 2;
+            minHealth = 7;
+            maxHealth = 10;
+            minDamage = 4;
+            maxDamage = 5;
+        }
+
+        if (4 < battlesWon && battlesWon <= 7)
+        {
+            minEnemies = 2;
+            maxEnemies = 2;
+            minHealth = 8;
+            maxHealth = 11;
+            minDamage = 6;
+            maxDamage = 8;
+        }
+
+        if (7 < battlesWon && battlesWon <= 10)
+        {
+            minEnemies = 2;
+            maxEnemies = 2;
+            minHealth = 9;
+            maxHealth = 14;
+            minDamage = 7;
+            maxDamage = 10;
+        }
+
+    }
+
+
+    public void Reset()
+    {
+        battlesWon = 0;
     }
 
 }

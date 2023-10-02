@@ -12,7 +12,11 @@ public class HexTile : MonoBehaviour
 
     public Animator TileAnimator    { get; private set; }
 
+    private float fallSpeed = 50f;
+    private float lifetime = 2f;
+
     private int tileType;
+    private bool selfDestructActivate = false;
 
     public void SetTileType(string tileTypeString)
     {
@@ -33,6 +37,11 @@ public class HexTile : MonoBehaviour
                 TileAnimator.SetBool("isChest", true);
                 break;
 
+            case "win":
+                tileType = 3;
+                TileAnimator.SetBool("isWin", true);
+                break;
+
             default:
                 tileType = 0;
                 break;
@@ -47,6 +56,38 @@ public class HexTile : MonoBehaviour
     private void Awake()
     {
         TileAnimator    = GetComponent<Animator>();
+    }
+
+    void OnMouseEnter()
+    {
+        if (isAvailable)
+        {
+            GameObject.FindGameObjectWithTag("BattleController").GetComponent<BattleController>().AudioManager.PlayAudio("hover", 0.8f);
+        }
+    }
+
+    private void Update()
+    {
+        if (selfDestructActivate)
+        {
+        // Move the GameObject downward
+        transform.Translate(Vector3.down * fallSpeed * Time.deltaTime);
+
+        // Decrease the lifetime
+        lifetime -= Time.deltaTime;
+
+        // Check if it's time to destroy the GameObject
+        if (lifetime <= 0f)
+        {
+            Destroy(gameObject);
+        }
+        }
+    }
+
+    public void SelfDestruct()
+    {
+        GetComponent<SpriteSorter>().enabled = false;
+        selfDestructActivate = true;
     }
 
 }

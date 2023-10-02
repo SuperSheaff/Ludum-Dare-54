@@ -43,6 +43,7 @@ public class GamePlayerChooseTileState : GameState
 
                if (Input.GetMouseButtonDown(0))
                 {
+                    gameController.BattleController.AudioManager.PlayAudio("click", 0.8f);
                     gameController.SetMiniPlayerTargetLocation(focusedOnHexTile.transform.position);
                     gameController.SetPreviousDirection(focusedOnHexTile.tileDirection);
                     gameController.SetCurrentHexTile(focusedOnHexTile);

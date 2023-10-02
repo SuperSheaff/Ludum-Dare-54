@@ -20,11 +20,7 @@ public class GameOverState : GameState
     {
         base.Enter();
 
-        // gameController.GameAudioManager.PlaySound("reaperlaugh");
-        // gameController.Reaper.StateMachine.ChangeState(gameController.Reaper.WaitState);
-        // gameController.GameScore.text = gameController.ScoreCounter.ToString() + " Moves";
-        // gameController.GameOverMenu.SetActive(true);
-        // gameController.ResetAllGridNodes();
+        gameController.GameOverScreen.SetActive(true);
     }
 
     public override void Exit()

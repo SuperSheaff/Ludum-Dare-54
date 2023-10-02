@@ -68,7 +68,11 @@ public class Dice : MonoBehaviour
 
     private void OnMouseEnter()
     {
-        Animator.SetBool("isHover", true);
+        if (isDraggable)
+        {
+            Animator.SetBool("isHover", true);
+            BattleController.AudioManager.PlayAudio("hover", 0.8f);
+        }
     }
 
     private void OnMouseExit()
@@ -118,6 +122,7 @@ public class Dice : MonoBehaviour
                 transform.position = new Vector3(collider.transform.position.x, collider.transform.position.y, collider.transform.position.z);
                 isDraggable = false;
                 collider.GetComponent<DiceSlot>().AddDiceToSlot(this);
+                BattleController.AudioManager.PlayAudio("click", 0.8f);
                 BattleController.SetCanRollDice(true);
                 return; // Exit the loop once a slot is found
             }
@@ -140,11 +145,17 @@ public class Dice : MonoBehaviour
         //     transform.position = BattleController.diceRollSpot.position;
         // }
     }
+    
+    public void AnimationBounce()
+    {
+        BattleController.AudioManager.PlayAudio("click", 0.8f);
+    }
 
     public void AnimationFinish()
     {
         isDraggable = true;
         FloatObject.canMove = true;
+        BattleController.AudioManager.PlayAudio("pling", 0.8f);
         updateRollIndicator();
     }
 

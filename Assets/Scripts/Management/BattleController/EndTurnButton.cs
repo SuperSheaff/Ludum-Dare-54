@@ -14,6 +14,8 @@ public class EndTurnButton : MonoBehaviour
     {
         BattleController    = GameObject.FindGameObjectWithTag("BattleController").GetComponent<BattleController>();
         Animator            = GetComponent<Animator>();
+        Animator.SetBool("canPressButton", false);
+
     }
 
     // Update is called once per frame
@@ -26,6 +28,7 @@ public class EndTurnButton : MonoBehaviour
     {
         if (canPressButton)
         {
+            BattleController.AudioManager.PlayAudio("click", 0.8f);
             BattleController.CalculatePlayerTurn();
             canPressButton = false;
         }
@@ -33,7 +36,11 @@ public class EndTurnButton : MonoBehaviour
 
     private void OnMouseEnter()
     {
-        Animator.SetBool("isHover", true);
+        if (canPressButton)
+        {
+            BattleController.AudioManager.PlayAudio("hover", 0.8f);
+            Animator.SetBool("isHover", true);
+        }
     }
 
     private void OnMouseExit()
@@ -44,6 +51,7 @@ public class EndTurnButton : MonoBehaviour
     public void SetCanPressButton(bool value)
     {
         canPressButton = value;
+        Animator.SetBool("canPressButton", value);
     }
 }
 
