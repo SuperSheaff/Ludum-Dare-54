@@ -9,6 +9,7 @@ public class Enemy : MonoBehaviour
 {
 
     public BattleController BattleController    { get; private set; }
+    public Animator Animator                    { get; private set; }
 
     private int attackDamage;
     private int maxHealth;
@@ -22,8 +23,8 @@ public class Enemy : MonoBehaviour
 
     private void Start()
     {
-        BattleController  = GameObject.FindGameObjectWithTag("BattleController").GetComponent<BattleController>();
-        // EnemyAnimator    = GetComponent<Animator>();
+        BattleController    = GameObject.FindGameObjectWithTag("BattleController").GetComponent<BattleController>();
+        Animator            = GetComponent<Animator>();
 
         Transform HealthAmountText = transform.Find("Health Amount");
         if (HealthAmountText != null)
@@ -59,6 +60,16 @@ public class Enemy : MonoBehaviour
             BattleController.ResetAllTargets();
             SetIsTarget(true);
         }
+    }
+
+    private void OnMouseEnter()
+    {
+        Animator.SetBool("isHover", true);
+    }
+
+    private void OnMouseExit()
+    {
+        Animator.SetBool("isHover", false);
     }
 
     private void updateHealthIndicator()

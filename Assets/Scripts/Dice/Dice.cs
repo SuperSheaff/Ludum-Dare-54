@@ -1,23 +1,32 @@
 using System.Collections;
 using System.Collections.Generic;
 using TMPro;
+using Unity.VisualScripting;
 using UnityEngine;
 
 public class Dice : MonoBehaviour
 {
     public BattleController BattleController    { get; private set; }
+    public Animator Animator                    { get; private set; }
+    public FloatObject FloatObject              { get; private set; }
 
     private int rolledAmount;
     private bool isBeingDragged = false;
-    private bool isDraggable = true;
+    private bool isDraggable = false;
 
     private TextMeshPro textMeshProComponent;
 
     private void Start()
     {
-        BattleController  = GameObject.FindGameObjectWithTag("BattleController").GetComponent<BattleController>();
-        // EnemyAnimator    = GetComponent<Animator>();
+        BattleController    = GameObject.FindGameObjectWithTag("BattleController").GetComponent<BattleController>();
+        Animator            = GetComponent<Animator>();
+        FloatObject         = GetComponent<FloatObject>();
 
+        FloatObject.canMove = false;
+    }
+
+    private void Awake()
+    {
         Transform HealthAmountText = transform.Find("Dice Amount");
         if (HealthAmountText != null)
         {
@@ -38,11 +47,13 @@ public class Dice : MonoBehaviour
         }
     }
 
+
     private void OnMouseDown()
     {
         if (isDraggable)
         {
             isBeingDragged = true;
+            FloatObject.canMove = false;
         }
     }
 
@@ -55,9 +66,18 @@ public class Dice : MonoBehaviour
         }
     }
 
+    private void OnMouseEnter()
+    {
+        Animator.SetBool("isHover", true);
+    }
+
+    private void OnMouseExit()
+    {
+        Animator.SetBool("isHover", false);
+    }
+
     private void Update()
     {
-        updateRollIndicator();
 
         if (isBeingDragged && isDraggable)
         {
@@ -94,7 +114,8 @@ public class Dice : MonoBehaviour
             if (collider.CompareTag("DiceSlot"))
             {
                 // Snap the dice to the slot's position
-                transform.position = collider.transform.position;
+                FloatObject.canMove = false;
+                transform.position = new Vector3(collider.transform.position.x, collider.transform.position.y, collider.transform.position.z);
                 isDraggable = false;
                 collider.GetComponent<DiceSlot>().AddDiceToSlot(this);
                 BattleController.SetCanRollDice(true);
@@ -104,6 +125,7 @@ public class Dice : MonoBehaviour
             {
                 // Return the dice to its original position
                 transform.position = BattleController.diceRollSpot.position;
+                FloatObject.canMove = true;
             }
         }
         
@@ -117,6 +139,13 @@ public class Dice : MonoBehaviour
         //     // Return the dice to its original position
         //     transform.position = BattleController.diceRollSpot.position;
         // }
+    }
+
+    public void AnimationFinish()
+    {
+        isDraggable = true;
+        FloatObject.canMove = true;
+        updateRollIndicator();
     }
 
     public void SelfDelete()

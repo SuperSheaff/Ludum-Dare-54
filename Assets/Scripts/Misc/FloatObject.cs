@@ -10,6 +10,8 @@ public class FloatObject : MonoBehaviour
     private Vector3 startPos;
     private float randomOffset;
 
+    public bool canMove = true;
+
     // Call this method to initialize the random seed
     public void InitializeRandomSeed()
     {
@@ -28,11 +30,14 @@ public class FloatObject : MonoBehaviour
 
     private void Update()
     {
-        // Calculate the new Y position for floating
-        float newY = startPos.y + Mathf.Sin(Time.time * floatSpeed) * randomOffset;
+        if (canMove)
+        {
+            // Calculate the new Y position for floating
+            float newY = startPos.y + Mathf.Sin(Time.time * floatSpeed) * randomOffset;
 
-        // Update the object's position
-        transform.position = new Vector3(transform.position.x, newY, transform.position.z);
+            // Update the object's position
+            transform.position = new Vector3(transform.position.x, newY, transform.position.z);
+        }
     }
 
 }
