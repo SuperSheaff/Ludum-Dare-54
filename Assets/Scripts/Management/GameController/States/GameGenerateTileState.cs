@@ -53,7 +53,7 @@ public class GameGenerateTileState : GameState
  private void generateThreeChoiceTiles()
     {
         Vector3 position0 = new Vector3(currentHexTilePosition.x - 40f, currentHexTilePosition.y + 16f, currentHexTilePosition.z);
-        Vector3 position1 = new Vector3(currentHexTilePosition.x, currentHexTilePosition.y + 31f, currentHexTilePosition.z);
+        Vector3 position1 = new Vector3(currentHexTilePosition.x, currentHexTilePosition.y + 32f, currentHexTilePosition.z);
         Vector3 position2 = new Vector3(currentHexTilePosition.x + 40f, currentHexTilePosition.y + 16f, currentHexTilePosition.z);
 
         for (int tiles = 0; tiles < 3; tiles++)

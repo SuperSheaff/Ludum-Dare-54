@@ -26,7 +26,7 @@ public class GameController : MonoBehaviour
         public int gridWidth        = 5;
         public int gridHeight       = 5;
         public float hexRadiusX     = 2.8f;
-        public float hexRadiusY     = 1.8f;
+        public float hexRadiusY     = 1.9f;
 
         public GameObject       Cursor;
         public MiniPlayer       MiniPlayer;

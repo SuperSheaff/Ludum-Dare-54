@@ -26,6 +26,9 @@ public class GameBattleState : GameState
     public override void Exit()
     {
         base.Exit();
+
+        gameController.CameraController.gameObject.SetActive(true);
+        gameController.BattleCam.SetActive(false);
     }
 
     public override void LogicUpdate()
